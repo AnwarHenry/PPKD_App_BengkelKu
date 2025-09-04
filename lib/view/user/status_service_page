@@ -1,0 +1,108 @@
+import 'package:bengkel_1/api/bengkel_api.dart';
+import 'package:bengkel_1/api/models/booking_model.dart';
+import 'package:bengkel_1/view/widgets/booking_card.dart';
+import 'package:bengkel_1/view/widgets/loading_indicator.dart';
+import 'package:flutter/material.dart';
+
+class StatusServicePage extends StatefulWidget {
+  const StatusServicePage({super.key});
+  static const id = "/status_service_page";
+
+  @override
+  State<StatusServicePage> createState() => _StatusServicePageState();
+}
+
+class _StatusServicePageState extends State<StatusServicePage> {
+  List<BookingModel> _activeBookings = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveBookings();
+  }
+
+  Future<void> _loadActiveBookings() async {
+    try {
+      final response = await BengkelAPI.getUserBookings();
+      if (response.success) {
+        setState(() {
+          _activeBookings = response.data!
+              .where((booking) =>
+                  booking.status != 'completed' && booking.status != 'cancelled')
+              .toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading active bookings: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Status Service'),
+      ),
+      body: _isLoading
+          ? const LoadingIndicator()
+          : _activeBookings.isEmpty
+              ? const Center(
+                  child: Text('Tidak ada service aktif'),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadActiveBookings,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _activeBookings.length,
+                    itemBuilder: (context, index) {
+                      final booking = _activeBookings[index];
+                      return BookingCard(
+                        booking: booking,
+                        onTap: () {
+                          _showStatusDetails(booking);
+                        },
+                      );
+                    },
+                  ),
+                ),
+    );
+  }
+
+  void _showStatusDetails(BookingModel booking) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Detail Status Service'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Kendaraan: ${booking.vehicleType}'),
+            Text('Plat: ${booking.licensePlate}'),
+            Text('Service: ${booking.serviceType}'),
+            Text('Status: ${booking.status}'),
+            Text('Tanggal: ${booking.scheduledDate.toString().substring(0, 10)}'),
+            if (booking.additionalNotes != null)
+              Text('Catatan: ${booking.additionalNotes}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+}

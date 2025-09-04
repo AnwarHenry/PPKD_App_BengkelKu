@@ -1,25 +1,29 @@
-class BengkelEndpoint {
-  static const String baseUrl = "https://appbengkel.mobileprojp.com/";
+class Endpoints {
+  static const String baseUrl = "https://appbengkel.mobileprojp.com";
 
-  // Auth
-  static const String login = "$baseUrl/auth/login";
-  static const String register = "$baseUrl/auth/register";
+  // Auth endpoints
+  static String get register => '$baseUrl/api/register';
+  static String get login => '$baseUrl/api/login';
+  static String get logout => '$baseUrl/api/logout';
+  static String get profile => '$baseUrl/api/profile';
 
-  // Booking
-  static const String getBookings = "$baseUrl/bookings";
-  static const String createBooking = "$baseUrl/bookings/create";
-  static const String updateBooking = "$baseUrl/bookings/update";
-  static const String deleteBooking = "$baseUrl/bookings/delete";
+  // Servis endpoints
+  static String get servis => '$baseUrl/api/servis';
+  static String get bookingServis => '$baseUrl/api/booking-servis';
+  static String get riwayatServis => '$baseUrl/api/riwayat-servis';
 
-  // Service
-  static const String services = "$baseUrl/services";
+  // Helper methods untuk endpoints dengan parameter
+  static String servisStatus(int id) => '$servis/$id/status';
+  static String deleteServis(int id) => '$servis/$id';
+  static String updateServis(int id) => '$servis/$id';
+  static String getServisById(int id) => '$servis/$id';
+  static String getBookingById(int id) => '$bookingServis/$id';
+  static String updateBookingStatus(int id) => '$bookingServis/$id/status';
+  static String deleteBooking(int id) => '$bookingServis/$id';
 
-  // Mechanic
-  static const String mechanics = "$baseUrl/mechanics";
-
-  // Report
-  static const String reports = "$baseUrl/reports";
-
-  // Profile
-  static const String profile = "$baseUrl/profile";
+  // Admin endpoints
+  static String get adminStats => '$baseUrl/api/admin/stats';
+  static String get adminUsers => '$baseUrl/api/admin/users';
+  static String get adminAllBookings => '$baseUrl/api/admin/bookings';
+  static String get adminAllServices => '$baseUrl/api/admin/services';
 }
