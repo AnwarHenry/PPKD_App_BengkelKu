@@ -39,7 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   // Logo
                   Image.asset(
-                    "assets/images/logo_bengkelku.png",
+                    "assets/images/bikecare_logo.png",
                     width: 220,
                     height: 220,
                   ),

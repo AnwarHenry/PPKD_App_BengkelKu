@@ -195,15 +195,6 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Kelola Service"),
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back, color: AppColors.white),
-        ),
-        backgroundColor: AppColors.mintGreen,
-        elevation: 0,
-      ),
       body: Column(
         children: [
           // Header
@@ -211,7 +202,11 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
-              gradient: AppColors.primaryGradient,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0A2463), Color(0xFF1E3A8A)],
+              ),
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,7 +216,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                     Icon(Icons.build, color: AppColors.white, size: 24),
                     SizedBox(width: 8),
                     Text(
-                      "Kelola Service",
+                      "Kelola Servis",
                       style: TextStyle(
                         color: AppColors.white,
                         fontSize: 20,
@@ -232,7 +227,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  "Buat dan kelola service Vespa anda",
+                  "Buat dan kelola service Kendaraan Anda",
                   style: TextStyle(color: AppColors.white, fontSize: 14),
                 ),
               ],
@@ -250,7 +245,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: createService,
-        backgroundColor: AppColors.mintGreen,
+        backgroundColor: const Color(0xFF0A2463),
         child: const Icon(Icons.add, color: AppColors.white),
       ),
     );
@@ -259,7 +254,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
   Widget _buildContent() {
     if (isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.mintGreen),
+        child: CircularProgressIndicator(color: Color(0xFF0A2463)),
       );
     }
 
@@ -453,6 +448,11 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                 Expanded(
                   child: TextButton(
                     onPressed: () => updateServiceStatus(service),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(
+                        0xFF0A2463,
+                      ), // Warna diubah di sini
+                    ),
                     child: const Text("Update Status"),
                   ),
                 ),
@@ -545,7 +545,7 @@ class _CreateServiceDialogFinalState extends State<CreateServiceDialogFinal> {
             decoration: const InputDecoration(
               labelText: "Keluhan/Permintaan",
               hintText: "Contoh: Mesin berisik, ganti oli, servis berkala",
-              border: OutlineInputBorder(),
+              // border: OutlineInputBorder(),
             ),
           ),
         ],

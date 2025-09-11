@@ -21,8 +21,8 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     "Motor Matic",
     "Motor Bebek",
     "Motor Sport",
-    "Vespa Classic",
-    "Vespa Modern",
+    "Motor Trail",
+    "Motor Moge",
   ];
 
   String? selectedVehicleType;
@@ -34,8 +34,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         title: const Text("Booking Service"),
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
+        backgroundColor: const Color(0xFF0A2463), // Warna header diubah
+        foregroundColor: Colors.white, // Warna teks dan icon di header
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -47,9 +49,15 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.lightMint,
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF0A2463),
+                    Color(0xFF1E3A8A),
+                  ], // Gradient baru
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.mintGreen.withOpacity(0.3)),
               ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,24 +66,28 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     children: [
                       Icon(
                         Icons.calendar_today,
-                        color: AppColors.mintGreen,
+                        color: Colors.white, // Warna icon diubah menjadi putih
                         size: 20,
                       ),
                       SizedBox(width: 8),
                       Text(
-                        "Booking Service Vespa",
+                        "Booking Service Motor Anda",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.darkGray,
+                          color:
+                              Colors.white, // Warna teks diubah menjadi putih
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: 8),
                   Text(
-                    "Isi form di bawah untuk membuat booking service Vespa anda",
-                    style: TextStyle(fontSize: 14, color: AppColors.mediumGray),
+                    "Isi form di bawah untuk membuat booking service kendaraan anda",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ), // Warna teks diubah
                   ),
                 ],
               ),
@@ -98,7 +110,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             height(16),
 
             // Description Field
-            buildTitle("Deskripsi Service"),
+            buildTitle("Deskripsi Servis"),
             height(8),
             buildTextField(
               controller: descriptionController,
@@ -114,8 +126,17 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               height: 50,
               child: ElevatedButton(
                 onPressed: isLoading ? null : submitBooking,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(
+                    0xFF0A2463,
+                  ), // Warna tombol diubah
+                  foregroundColor: Colors.white, // Warna teks tombol
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 child: isLoading
-                    ? const CircularProgressIndicator(color: AppColors.white)
+                    ? const CircularProgressIndicator(color: Colors.white)
                     : const Text("Buat Booking"),
               ),
             ),
@@ -127,16 +148,18 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.infoBlue.withOpacity(0.1),
+                color: const Color(0xFF0A2463).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.infoBlue.withOpacity(0.3)),
+                border: Border.all(
+                  color: const Color(0xFF0A2463).withOpacity(0.3),
+                ),
               ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info, color: AppColors.infoBlue, size: 20),
+                      Icon(Icons.info, color: Color(0xFF0A2463), size: 20),
                       SizedBox(width: 8),
                       Text(
                         "Informasi",
@@ -199,10 +222,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       decoration: InputDecoration(
         hintText: "Pilih tanggal booking",
         hintStyle: TextStyle(color: AppColors.mediumGray.withOpacity(0.7)),
-        suffixIcon: const Icon(
-          Icons.calendar_today,
-          color: AppColors.mintGreen,
-        ),
+        suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF0A2463)),
       ),
       onTap: () async {
         final DateTime? picked = await showDatePicker(

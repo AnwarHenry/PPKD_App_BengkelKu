@@ -49,23 +49,24 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                "assets/images/logo_bengkelku.png",
+                "assets/images/bikecare_logo.png",
                 width: 250,
                 height: 250,
               ),
               const SizedBox(height: 24),
 
-              const SizedBox(height: 12),
+              const SizedBox(width: 12),
 
               // Slogan
               const Text(
-                "Layanan automotive terbaik untuk kendaraan Anda",
+                "Layanan otomotif terbaik untuk kendaraan Anda",
                 style: TextStyle(
                   fontSize: 18,
                   color: AppColors.white,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 1.2,
                 ),
+                textAlign: TextAlign.center,
               ),
 
               const SizedBox(height: 40),
@@ -83,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   color: AppColors.white,
-                  fontWeight: FontWeight.w300,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],

@@ -3,8 +3,6 @@ import 'package:aplikasi_bengkel_motor/preference/shared_preference.dart';
 import 'package:aplikasi_bengkel_motor/theme/app_colors.dart';
 import 'package:aplikasi_bengkel_motor/views/auth/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,8 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int userId = 0;
   String userCreatedAt = "";
   bool isLoading = true;
-  File? _profileImage;
-  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -38,7 +34,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final email = await SharedPreference.getUserEmail();
       final id = await SharedPreference.getUserId();
       final createdAt = await SharedPreference.getUserCreatedAt();
-      final imagePath = await SharedPreference.getUserProfileImage();
 
       if (mounted) {
         setState(() {
@@ -46,12 +41,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           userEmail = email ?? "user@example.com";
           userId = id ?? 0;
           userCreatedAt = createdAt ?? "Tanggal tidak tersedia";
-
-          // Load profile image if exists
-          if (imagePath != null && imagePath.isNotEmpty) {
-            _profileImage = File(imagePath);
-          }
-
           isLoading = false;
         });
       }
@@ -60,39 +49,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           isLoading = false;
         });
-      }
-    }
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(source: source);
-
-      if (pickedFile != null) {
-        setState(() {
-          _profileImage = File(pickedFile.path);
-        });
-
-        // Save image path to shared preferences
-        await SharedPreference.saveUserProfileImage(pickedFile.path);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Foto profil berhasil diubah"),
-              backgroundColor: AppColors.successGreen,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Gagal memilih gambar: ${e.toString()}"),
-            backgroundColor: AppColors.redAccent,
-          ),
-        );
       }
     }
   }
@@ -128,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Logout berhasil"),
-              backgroundColor: AppColors.successGreen,
+              backgroundColor: AppColors.blueAccent,
             ),
           );
           context.pushAndRemoveAll(const LoginScreen());
@@ -163,6 +119,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ),
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back),
+        ),
       ),
       body: isLoading
           ? const Center(
@@ -194,64 +154,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Column(
                       children: [
-                        // Profile Avatar with Edit Button
-                        Stack(
-                          children: [
-                            Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 3,
-                                ),
-                              ),
-                              child: ClipOval(
-                                child: _profileImage != null
-                                    ? Image.file(
-                                        _profileImage!,
-                                        fit: BoxFit.cover,
-                                        width: 100,
-                                        height: 100,
-                                      )
-                                    : Container(
-                                        color: Colors.white.withOpacity(0.2),
-                                        child: const Icon(
-                                          Icons.person,
-                                          size: 50,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              ),
+                        // Profile Avatar dengan assets image
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            image: const DecorationImage(
+                              image: AssetImage("assets/images/profile.png"),
+                              fit: BoxFit.cover,
                             ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0A2463),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.camera_alt,
-                                    size: 18,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: () {
-                                    _showImagePickerDialog();
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                         const SizedBox(height: 16),
 
@@ -285,19 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           child: Text(
                             "ID: $userId",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Bergabung sejak: $userCreatedAt",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withOpacity(0.7),
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ),
                       ],
@@ -424,34 +326,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         onTap: onTap,
       ),
-    );
-  }
-
-  void _showImagePickerDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Pilih Sumber Foto"),
-          content: const Text("Dari mana Anda ingin mengambil foto?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _pickImage(ImageSource.gallery);
-              },
-              child: const Text("Galeri"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _pickImage(ImageSource.camera);
-              },
-              child: const Text("Kamera"),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -600,14 +474,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text("• Melacak status service"),
               Text("• Melihat riwayat service"),
               Text("• Mendapatkan laporan analitik"),
-              SizedBox(height: 16),
-              Text(
-                "Dikembangkan dengan ❤️ untuk penggemar motor",
-                style: TextStyle(
-                  fontStyle: FontStyle.italic,
-                  color: Color(0xFF7B8794),
-                ),
-              ),
             ],
           ),
           actions: [

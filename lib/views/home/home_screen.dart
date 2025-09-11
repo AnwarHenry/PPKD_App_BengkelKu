@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:aplikasi_bengkel_motor/extension/navigation.dart';
 import 'package:aplikasi_bengkel_motor/preference/shared_preference.dart';
+import 'package:aplikasi_bengkel_motor/services/api/service_api.dart';
 import 'package:aplikasi_bengkel_motor/views/profile/profile_screen.dart';
 import 'package:aplikasi_bengkel_motor/views/service/booking_form_screen.dart';
 import 'package:aplikasi_bengkel_motor/views/service/booking_list_screen.dart';
 import 'package:aplikasi_bengkel_motor/views/service/service_history_screen.dart';
 import 'package:aplikasi_bengkel_motor/views/service/service_list_screen.dart';
 import 'package:aplikasi_bengkel_motor/views/service/service_report_screen.dart';
-import 'package:aplikasi_bengkel_motor/widgets/drawer_vespario.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 
@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<String> _titles = [
     "BikeCare",
-    "Service Saya",
+    "Servis Saya",
     "Riwayat",
     "Laporan",
   ];
@@ -70,20 +70,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               actions: [
-                // Tambahkan icon profile di pojok kanan
                 IconButton(
                   icon: const Icon(Icons.person, size: 28),
                   onPressed: () {
-                    context.push(
-                      const ProfileScreen(),
-                    ); // Navigasi ke halaman profile
+                    context.push(const ProfileScreen());
                   },
                 ),
                 const SizedBox(width: 8),
               ],
             )
           : null,
-      drawer: const DrawerVesparioFinal(),
       body: _pages[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -125,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.build_outlined),
                 activeIcon: Icon(Icons.build),
-                label: "Service",
+                label: "Servis",
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.history_outlined),
@@ -156,12 +152,18 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
   String userName = "";
   int _currentCarouselIndex = 0;
   File? _profileImage;
+  final TextEditingController _searchController = TextEditingController();
+
+  // Data status kendaraan dari service terbaru
+  Map<String, dynamic>? _latestService;
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
     loadUserData();
-    loadProfileImage();
+    fetchLatestService();
   }
 
   void loadUserData() async {
@@ -171,13 +173,460 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
     });
   }
 
-  void loadProfileImage() async {
-    final imagePath = await SharedPreference.getUserProfileImage();
-    if (imagePath != null && imagePath.isNotEmpty) {
+  Future<void> fetchLatestService() async {
+    try {
+      // Mengambil data service terbaru dari API
+      final response = await ServiceApi.getAllServices();
+
+      if (response.data != null && response.data!.isNotEmpty) {
+        // Urutkan berdasarkan tanggal dibuat (terbaru pertama)
+        response.data!.sort((a, b) {
+          final dateA = a.createdAt != null
+              ? DateTime.parse(a.createdAt!)
+              : DateTime(0);
+          final dateB = b.createdAt != null
+              ? DateTime.parse(b.createdAt!)
+              : DateTime(0);
+          return dateB.compareTo(dateA);
+        });
+
+        // Ambil service terbaru
+        final latestService = response.data!.first;
+
+        setState(() {
+          _latestService = {
+            'id': latestService.id,
+            'vehicleType': latestService.vehicleType,
+            'complaint': latestService.complaint,
+            'bookingDate': latestService.createdAt,
+            'status': latestService.status?.toLowerCase() ?? '',
+          };
+          _isLoading = false;
+          _errorMessage = '';
+        });
+
+        // Simpan ke shared preferences untuk akses cepat
+        await SharedPreference.saveLatestService(_latestService!);
+      } else {
+        // Coba ambil dari booking jika tidak ada service
+        final bookingResponse = await ServiceApi.getAllBookings();
+        if (bookingResponse.data != null && bookingResponse.data!.isNotEmpty) {
+          bookingResponse.data!.sort((a, b) {
+            final dateA = a.createdAt != null
+                ? DateTime.parse(a.createdAt!)
+                : DateTime(0);
+            final dateB = b.createdAt != null
+                ? DateTime.parse(b.createdAt!)
+                : DateTime(0);
+            return dateB.compareTo(dateA);
+          });
+
+          final latestBooking = bookingResponse.data!.first;
+
+          setState(() {
+            _latestService = {
+              'id': latestBooking.id,
+              'vehicleType': latestBooking.vehicleType,
+              'complaint': latestBooking.description,
+              'bookingDate': latestBooking.bookingDate,
+              'status': '',
+            };
+            _isLoading = false;
+          });
+
+          await SharedPreference.saveLatestBooking(_latestService!);
+        } else {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = '';
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching service data: $e');
       setState(() {
-        _profileImage = File(imagePath);
+        _errorMessage = 'Gagal memuat data service';
+        _isLoading = false;
       });
     }
+  }
+
+  void _performSearch(String query) {
+    if (query.isEmpty) return;
+
+    if (query.toLowerCase().contains('booking') ||
+        query.toLowerCase().contains('janji')) {
+      context.push(const BookingListScreen());
+    } else if (query.toLowerCase().contains('service') ||
+        query.toLowerCase().contains('kelola')) {
+      context.push(const ServiceListScreen());
+    } else if (query.toLowerCase().contains('riwayat') ||
+        query.toLowerCase().contains('history')) {
+      context.push(const ServiceHistoryScreen());
+    } else if (query.toLowerCase().contains('laporan') ||
+        query.toLowerCase().contains('report')) {
+      context.push(const ServiceReportScreen(showAppBar: false));
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'menunggu':
+        return Colors.orange;
+      case 'diproses':
+        return Colors.blue;
+      case 'selesai':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'menunggu':
+        return Icons.access_time;
+      case 'diproses':
+        return Icons.build;
+      case 'selesai':
+        return Icons.check_circle;
+      default:
+        return Icons.info;
+    }
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return '-';
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day} ${_getMonthName(date.month)} ${date.year}';
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    return months[month - 1];
+  }
+
+  Widget _buildInfoItem(
+    IconData icon,
+    String title,
+    String value, {
+    Color? valueColor,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: const Color(0xFF0A2463), size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: valueColor ?? Colors.black,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: const Center(
+        child: Column(
+          children: [
+            CircularProgressIndicator(color: Color(0xFF0A2463)),
+            SizedBox(height: 12),
+            Text(
+              "Memuat status service...",
+              style: TextStyle(color: Color(0xFF0A2463)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red, size: 40),
+          const SizedBox(height: 12),
+          Text(
+            _errorMessage,
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: fetchLatestService,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0A2463),
+            ),
+            child: const Text('Coba Lagi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.directions_bike, color: Colors.grey, size: 40),
+          const SizedBox(height: 12),
+          const Text(
+            'Belum ada service aktif',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Silakan booking service terlebih dahulu untuk melihat status',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              context.push(const BookingFormScreen());
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0A2463),
+            ),
+            child: const Text('Booking Service'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVehicleStatusSection() {
+    if (_isLoading) {
+      return _buildLoadingState();
+    }
+
+    if (_errorMessage.isNotEmpty) {
+      return _buildErrorState();
+    }
+
+    if (_latestService == null) {
+      return _buildEmptyState();
+    }
+
+    final status = _latestService!['status']?.toString() ?? 'menunggu';
+    final statusColor = _getStatusColor(status);
+    final statusIcon = _getStatusIcon(status);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              // Icon(Icons.directions_bike, color: Color(0xFF0A2463), size: 24),
+              SizedBox(width: 12),
+              Text(
+                "Status Servis Terkini",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0A2463),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Card Status
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: statusColor.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(statusIcon, color: statusColor, size: 32),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        status.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: statusColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _latestService!['complaint']?.toString() ??
+                            'Service rutin',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Info Service Lengkap
+          _buildInfoItem(
+            Icons.two_wheeler,
+            "Jenis Kendaraan",
+            _latestService!['vehicleType']?.toString() ?? 'Motor Matic',
+          ),
+          const SizedBox(height: 12),
+
+          _buildInfoItem(
+            Icons.description,
+            "Keluhan",
+            _latestService!['complaint']?.toString() ?? 'Tidak ada keluhan',
+          ),
+          const SizedBox(height: 12),
+
+          _buildInfoItem(
+            Icons.calendar_today,
+            "Tanggal Booking",
+            _formatDate(_latestService!['bookingDate']?.toString()),
+          ),
+          const SizedBox(height: 12),
+
+          _buildInfoItem(
+            Icons.calendar_month,
+            "Status",
+            status.toUpperCase(),
+            valueColor: statusColor,
+          ),
+          const SizedBox(height: 16),
+
+          // Tombol Aksi
+          Row(
+            children: [
+              // Expanded(
+              //   child: OutlinedButton(
+              //     onPressed: _refreshData,
+              //     style: OutlinedButton.styleFrom(
+              //       foregroundColor: const Color(0xFF0A2463),
+              //       side: const BorderSide(color: Color(0xFF0A2463)),
+              //     ),
+              //     child: const Text("Refresh"),
+              //   ),
+              // ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.push(const ServiceListScreen());
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0A2463),
+                  ),
+                  child: const Text("Lihat Detail"),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -234,6 +683,9 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
     ];
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,7 +714,7 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
               children: [
                 Row(
                   children: [
-                    // Avatar dengan foto profil
+                    // Avatar dengan assets image
                     Container(
                       width: 60,
                       height: 60,
@@ -270,20 +722,11 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
                         color: Colors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
-                        image: _profileImage != null
-                            ? DecorationImage(
-                                image: FileImage(_profileImage!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
+                        image: const DecorationImage(
+                          image: AssetImage("assets/images/profile.png"),
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                      child: _profileImage == null
-                          ? const Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 30,
-                            )
-                          : null,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -313,7 +756,7 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  "Solusi lengkap untuk perawatan kendaraan Anda. Booking service, pantau progress, dan nikmati pengalaman servis yang premium.",
+                  "BikeCare adalah Solusi terbaik untuk perawatan kendaraan Anda.",
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
@@ -321,6 +764,36 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
                   ),
                 ),
               ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Search Bar
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: "Cari booking, riwayat, status ...",
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                prefixIcon: Icon(Icons.search, color: Color(0xFF0A2463)),
+              ),
+              onSubmitted: _performSearch,
             ),
           ),
 
@@ -346,7 +819,7 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
             children: [
               CarouselSlider(
                 options: CarouselOptions(
-                  height: 220,
+                  height: 270,
                   aspectRatio: 16 / 9,
                   viewportFraction: 0.8,
                   initialPage: 0,
@@ -399,6 +872,11 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
               ),
             ],
           ),
+
+          const SizedBox(height: 24),
+
+          // Status Kendaraan dan Service
+          _buildVehicleStatusSection(),
 
           const SizedBox(height: 24),
 
@@ -473,78 +951,6 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
                   ),
                   child: const Text(
                     "Pelajari Lebih Lanjut",
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Promo Section - Mengganti Stats Overview
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFFF6B35), Color(0xFFF7931E)],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF6B35).withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.local_offer, color: Colors.white, size: 24),
-                    SizedBox(width: 12),
-                    Text(
-                      "Promo Spesial",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildPromoItem(
-                  "Service Berkala",
-                  "Diskon 15% untuk service berkala hingga akhir bulan",
-                ),
-                _buildPromoItem(
-                  "Ganti Oli",
-                  "Gratis pengecekan mesin untuk setiap ganti oli",
-                ),
-                _buildPromoItem(
-                  "Paket Service Lengkap",
-                  "Dapatkan harga khusus untuk paket service lengkap",
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    // Aksi untuk melihat promo lebih lanjut
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFFFF6B35),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    "Lihat Semua Promo",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -640,49 +1046,6 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
                 color: Colors.white70,
                 height: 1.4,
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPromoItem(String title, String description) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            margin: const EdgeInsets.only(top: 6, right: 12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-              ],
             ),
           ),
         ],

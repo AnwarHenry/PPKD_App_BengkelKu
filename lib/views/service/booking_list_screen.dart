@@ -202,8 +202,15 @@ class _BookingListScreenState extends State<BookingListScreen> {
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back, color: AppColors.white),
         ),
-        backgroundColor: AppColors.orange,
+        backgroundColor: const Color(0xFF0A2463), // Warna AppBar diubah
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0A2463), Color(0xFF1E3A8A)], // Gradient baru
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -213,7 +220,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.orange, AppColors.darkOrange],
+                colors: [Color(0xFF0A2463), Color(0xFF1E3A8A)], // Gradient baru
               ),
             ),
             child: const Column(
@@ -261,7 +268,9 @@ class _BookingListScreenState extends State<BookingListScreen> {
   Widget _buildContent() {
     if (isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.orange),
+        child: CircularProgressIndicator(
+          color: Color(0xFF0A2463),
+        ), // Warna diubah
       );
     }
 
@@ -281,7 +290,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
             ElevatedButton(
               onPressed: loadBookings,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.orange,
+                backgroundColor: const Color(0xFF0A2463), // Warna diubah
               ),
               child: const Text("Coba Lagi"),
             ),
@@ -343,12 +352,14 @@ class _BookingListScreenState extends State<BookingListScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.orange.withOpacity(0.1),
+                    color: const Color(
+                      0xFF0A2463,
+                    ).withOpacity(0.1), // Warna diubah
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.motorcycle,
-                    color: AppColors.orange,
+                    color: Color(0xFF0A2463), // Warna diubah
                     size: 20,
                   ),
                 ),
@@ -384,7 +395,9 @@ class _BookingListScreenState extends State<BookingListScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.infoBlue.withOpacity(0.1),
+                    color: const Color(
+                      0xFF0A2463,
+                    ).withOpacity(0.1), // Warna diubah
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -392,7 +405,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.infoBlue,
+                      color: Color(0xFF0A2463), // Warna diubah
                     ),
                   ),
                 ),
@@ -443,8 +456,10 @@ class _BookingListScreenState extends State<BookingListScreen> {
                     icon: const Icon(Icons.build, size: 16),
                     label: const Text("Konversi"),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.mintGreen,
-                      side: const BorderSide(color: AppColors.mintGreen),
+                      foregroundColor: const Color(0xFF0A2463), // Warna diubah
+                      side: const BorderSide(
+                        color: Color(0xFF0A2463),
+                      ), // Warna diubah
                     ),
                   ),
                 ),
@@ -455,8 +470,10 @@ class _BookingListScreenState extends State<BookingListScreen> {
                     icon: const Icon(Icons.edit, size: 16),
                     label: const Text("Edit"),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.infoBlue,
-                      side: const BorderSide(color: AppColors.infoBlue),
+                      foregroundColor: const Color(0xFF0A2463), // Warna diubah
+                      side: const BorderSide(
+                        color: Color(0xFF0A2463),
+                      ), // Warna diubah
                     ),
                   ),
                 ),

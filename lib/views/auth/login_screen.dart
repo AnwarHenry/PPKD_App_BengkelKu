@@ -37,49 +37,37 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Welcome Title
+                  const SizedBox(height: 15),
+
+                  const SizedBox(height: 8),
                   // Logo
                   Image.asset(
-                    "assets/images/logo_bengkelku.png",
-                    width: 120,
-                    height: 120,
+                    "assets/images/bikecare_logo.png",
+                    width: 220,
+                    height: 220,
                   ),
-                  const SizedBox(height: 16),
-
-                  // Welcome Title
+                  // const SizedBox(height: 5),
+                  // Tagline
                   const Text(
                     "Selamat Datang di",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 24,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 8),
-
-                  // Tagline
                   const Text(
                     "Bengkel Profesional Terpercaya",
                     style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
                       color: Colors.white,
                       letterSpacing: 1.2,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-
-                  // Slogan
-                  const Text(
-                    "Layanan automotive terbaik untuk kendaraan Anda",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w300,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
 
                   // Login Form dengan latar belakang semi-transparan
                   Container(
@@ -102,7 +90,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
+                            textAlign: TextAlign.center,
                           ),
+
                           const SizedBox(height: 8),
                           const Text(
                             "Silahkan masuk untuk melanjutkan",
@@ -315,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Login berhasil"),
-              backgroundColor: AppColors.successGreen,
+              backgroundColor: AppColors.blueAccent,
             ),
           );
           context.pushAndRemoveAll(const HomeScreen());

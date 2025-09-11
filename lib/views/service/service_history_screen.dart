@@ -92,7 +92,7 @@ class _ServiceHistoryScreenState extends State<ServiceHistoryScreen> {
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.infoBlue, Color(0xFF2980B9)],
+                colors: [Color(0xFF0A2463), Color(0xFF1E3A8A)],
               ),
             ),
             child: const Column(
