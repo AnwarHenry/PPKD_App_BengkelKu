@@ -183,7 +183,7 @@ class _ServiceReportScreenState extends State<ServiceReportScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "Analisa data dan statistik service Vespa",
+                  "Analisa data dan statistik service motor",
                   style: TextStyle(color: AppColors.white, fontSize: 14),
                 ),
               ],

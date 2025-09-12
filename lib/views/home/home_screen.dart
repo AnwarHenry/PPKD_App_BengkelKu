@@ -596,34 +596,6 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
             valueColor: statusColor,
           ),
           const SizedBox(height: 16),
-
-          // Tombol Aksi
-          Row(
-            children: [
-              // Expanded(
-              //   child: OutlinedButton(
-              //     onPressed: _refreshData,
-              //     style: OutlinedButton.styleFrom(
-              //       foregroundColor: const Color(0xFF0A2463),
-              //       side: const BorderSide(color: Color(0xFF0A2463)),
-              //     ),
-              //     child: const Text("Refresh"),
-              //   ),
-              // ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.push(const ServiceListScreen());
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0A2463),
-                  ),
-                  child: const Text("Lihat Detail"),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
