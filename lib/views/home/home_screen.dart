@@ -655,8 +655,8 @@ class _HomeContentFinalState extends State<HomeContentFinal> {
     ];
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(
-        parent: AlwaysScrollableScrollPhysics(),
+      physics: const CarouselScrollPhysics(
+        // parent: AlwaysScrollableScrollPhysics(),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
